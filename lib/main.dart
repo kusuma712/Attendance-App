@@ -13,6 +13,7 @@ import 'expenses.dart';
 import 'welcome.dart';
 import 'responsive_layout.dart';
 import 'employee_details.dart';
+import 'attendance_details.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 FlutterLocalNotificationsPlugin();
 
@@ -365,24 +366,23 @@ class _HomePageState extends State<HomePage> {
   bool alreadyCheckedInToday = false;
   DateTime _currentTime = DateTime.now();
   late Timer _timer;
+  int selectedMonth = DateTime.now().month;
+  int selectedYear = DateTime.now().year;
+
+  List<int> yearsList = List.generate(5, (index) => DateTime.now().year - index);
 
   final String statusApi = "https://hrm.eltrive.com/api/status";
   final String checkinApi = "https://hrm.eltrive.com/api/checkin";
-  List<Map<String, String>> attendanceRecords = [];
 
-  // STATIC LAST 1 MONTH ATTENDANCE DATA
-  final List<Map<String, String>> lastMonthAttendance = [
-    {"date": "01 Mar 2026", "checkin": "09:12:10", "checkout": "06:40:22", "status": "P"},
-    {"date": "02 Mar 2026", "checkin": "09:18:05", "checkout": "06:35:12", "status": "P"},
-    {"date": "03 Mar 2026", "checkin": "--", "checkout": "--", "status": "L"},
-    {"date": "04 Mar 2026", "checkin": "09:10:00", "checkout": "06:42:55", "status": "P"},
-    {"date": "05 Mar 2026", "checkin": "09:25:40", "checkout": "06:30:10", "status": "P"},
-    {"date": "06 Mar 2026", "checkin": "--", "checkout": "--", "status": "L"},
-    {"date": "07 Mar 2026", "checkin": "09:14:11", "checkout": "06:48:20", "status": "P"},
-    {"date": "08 Mar 2026", "checkin": "09:16:30", "checkout": "06:39:50", "status": "P"},
-    {"date": "09 Mar 2026", "checkin": "--", "checkout": "--", "status": "L"},
-    {"date": "10 Mar 2026", "checkin": "09:09:00", "checkout": "06:44:33", "status": "P"},
-  ];
+  List<Map<String, String>> attendanceList = [];
+
+  String _getMonthName(int month) {
+    List<String> months = [
+      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ];
+    return months[month - 1];
+  }
 
   Future<void> getEmployeeStatus() async {
     try {
@@ -439,7 +439,12 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    getEmployeeStatus();
+
+    Future.microtask(() async {
+      await getEmployeeStatus();
+
+    });
+
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       setState(() => _currentTime = DateTime.now());
     });
@@ -701,11 +706,7 @@ class _HomePageState extends State<HomePage> {
       if (data["status"] == "success") {
         String cumulativeHours =
             data["cumulative_working_hours"] ?? workedDuration;
-        if (attendanceRecords.isNotEmpty) {
-          attendanceRecords.last["status"] = "Out";
-          attendanceRecords.last["out"] = onlyTime;
-          attendanceRecords.last["duration"] = cumulativeHours;
-        }
+
         await showNotification(
             "Check Out Successful", "Worked Duration: $cumulativeHours");
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
@@ -1139,7 +1140,7 @@ class _HomePageState extends State<HomePage> {
 
           const SizedBox(height: 20),
 
-          lastMonthAttendanceWidget(),
+        AttendanceDetails(authToken: widget.authToken),
 
           const SizedBox(height: 30),
 
@@ -1148,105 +1149,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  // add attendance table ui
-  Widget lastMonthAttendanceWidget() {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.06),
-            blurRadius: 12,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-
-          const Text(
-            "Last 1 Month Attendance",
-            style: TextStyle(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-
-          const SizedBox(height: 15),
-
-          Table(
-            columnWidths: const {
-              0: FlexColumnWidth(2),
-              1: FlexColumnWidth(2),
-              2: FlexColumnWidth(2),
-              3: FlexColumnWidth(1),
-            },
-            border: TableBorder.all(color: Colors.grey.shade300),
-            children: [
-
-              // HEADER
-              const TableRow(
-                decoration: BoxDecoration(color: Color(0xFFE8F5E9)),
-                children: [
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text("Date", style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text("Check In", style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text("Check Out", style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                  Padding(
-                    padding: EdgeInsets.all(8),
-                    child: Text("Status", style: TextStyle(fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-
-              ...lastMonthAttendance.map((record) {
-                return TableRow(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(record["date"]!),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(record["checkin"]!),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(record["checkout"]!),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(8),
-                      child: Text(
-                        record["status"]!,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: record["status"] == "P"
-                              ? Colors.green
-                              : Colors.red,
-                        ),
-                      ),
-                    ),
-                  ],
-                );
-              }).toList(),
-            ],
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _getTabContent() {
     switch (_selectedIndex) {

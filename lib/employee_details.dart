@@ -1,3 +1,4 @@
+import 'main.dart';
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -139,17 +140,21 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
           child: Column(
             children: [
               const SizedBox(height: 20),
+
               CircleAvatar(
                 radius: 60,
                 backgroundColor: Colors.grey.shade300,
                 child: const Icon(Icons.person, size: 60),
               ),
+
               const SizedBox(height: 20),
+
               Text(
                 employee!.name,
                 style: const TextStyle(
                     fontSize: 22, fontWeight: FontWeight.bold),
               ),
+
               const SizedBox(height: 30),
 
               buildRow(context, "Employee ID", employee!.employeeId),
@@ -159,6 +164,57 @@ class _EmployeeProfilePageState extends State<EmployeeProfilePage> {
               buildRow(context, "Contact", employee!.contact),
               buildRow(context, "Date Of Joining", employee!.doj),
               buildRow(context, "Insured ID", employee!.insuredId),
+
+              const SizedBox(height: 40),
+
+              // 🔴 LOGOUT BUTTON
+              SizedBox(
+                width: double.infinity,
+                height: 50,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.red,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (BuildContext context) {
+                        return AlertDialog(
+                          title: const Text("Logout"),
+                          content: const Text("Are you sure you want to logout?"),
+                          actions: [
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pop(context); // ❌ Close dialog
+                              },
+                              child: const Text("Cancel"),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.pushAndRemoveUntil(
+                                  context,
+                                  MaterialPageRoute(
+                                      builder: (_) => const LoginPage()),
+                                      (route) => false,
+                                );
+                              },
+                              child: const Text("OK"),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                  child: const Text(
+                    "Logout",
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+              ),
             ],
           ),
         ),
