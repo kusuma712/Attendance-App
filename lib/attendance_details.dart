@@ -26,7 +26,6 @@ class _AttendanceDetailsState extends State<AttendanceDetails> {
     fetchAttendance();
   }
 
-  // ✅ API CALL
   Future<void> fetchAttendance() async {
     try {
       final response = await http.post(
@@ -60,6 +59,19 @@ class _AttendanceDetailsState extends State<AttendanceDetails> {
             checkIn = value["checkin"]?.toString() ?? "--";
             checkOut = value["checkout"]?.toString() ?? "--";
             duration = value["duration"]?.toString() ?? "--";
+          }
+
+          // ✅ 🔥 FORCE SUNDAY OVERRIDE
+          DateTime date =
+          DateTime(selectedYear, selectedMonth, dayNumber);
+
+          bool isSunday = date.weekday == DateTime.sunday;
+
+          if (isSunday) {
+            status = "S";
+            checkIn = "--";
+            checkOut = "--";
+            duration = "--";
           }
 
           tempList.add({
@@ -102,7 +114,6 @@ class _AttendanceDetailsState extends State<AttendanceDetails> {
     return months[month - 1];
   }
 
-  // ✅ TABLE CELL
   Widget _tableCell(String text, {bool isStatus = false}) {
     return Padding(
       padding: const EdgeInsets.all(10),
@@ -112,12 +123,12 @@ class _AttendanceDetailsState extends State<AttendanceDetails> {
           fontWeight: isStatus ? FontWeight.bold : FontWeight.normal,
           color: isStatus
               ? text == "P"
-              ? Colors.green
+              ? Colors.green.shade800
               : text == "A"
-              ? Colors.red
-              : text == "L"
-              ? Colors.orange
-              : Colors.grey
+              ? Colors.red.shade800
+              : text == "S"
+              ? Colors.orange.shade800
+              : Colors.black
               : Colors.black,
         ),
       ),
@@ -144,7 +155,6 @@ class _AttendanceDetailsState extends State<AttendanceDetails> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
 
-          // 🔹 HEADER + FILTER
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
@@ -219,38 +229,50 @@ class _AttendanceDetailsState extends State<AttendanceDetails> {
                         Padding(
                           padding: EdgeInsets.all(10),
                           child: Text("Date",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         Padding(
                           padding: EdgeInsets.all(10),
                           child: Text("Check In",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         Padding(
                           padding: EdgeInsets.all(10),
                           child: Text("Check Out",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         Padding(
                           padding: EdgeInsets.all(10),
                           child: Text("Duration",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                         Padding(
                           padding: EdgeInsets.all(10),
                           child: Text("Status",
-                              style: TextStyle(
-                                  fontWeight: FontWeight.bold)),
+                              style: TextStyle(fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
 
                     ...attendanceList.map((record) {
+                      String status = record["status"]!.toUpperCase();
+
+                      Color rowColor;
+
+                      if (status == "P") {
+                        rowColor = Colors.green.shade100;
+                      } else if (status == "A") {
+                        rowColor = Colors.red.shade100;
+                      } else if (status == "S") {
+                        rowColor = Colors.yellow.shade100;
+                      } else {
+                        rowColor = Colors.white;
+                      }
+
                       return TableRow(
+                        decoration: BoxDecoration(
+                          color: rowColor,
+                        ),
                         children: [
                           _tableCell(record["date"]!),
                           _tableCell(record["checkin"]!),
