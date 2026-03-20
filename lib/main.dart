@@ -99,8 +99,26 @@ class _LoginPageState extends State<LoginPage> {
     String password = _passwordController.text.trim();
 
     if (username.isEmpty || password.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Enter username & password")));
+      showDialog(
+        context: context,
+        builder: (context) {
+          return AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+            title: const Text("Missing Details"),
+            content: const Text("Please enter username & password"),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text("OK"),
+              ),
+            ],
+          );
+        },
+      );
       return;
     }
 
@@ -203,30 +221,8 @@ class _LoginPageState extends State<LoginPage> {
               ),
               children: [
                 // Back button
-                Align(
-                  alignment: Alignment.centerLeft,
-                  child: GestureDetector(
-                    onTap: () => Navigator.pushAndRemoveUntil(
-                      context,
-                      MaterialPageRoute(builder: (_) => const WelcomeScreen()),
-                          (route) => false,
-                    ),
-                    child: Container(
-                      width: 42,
-                      height: 42,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.30),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white60, width: 1.8),
-                      ),
-                      child: const Icon(
-                        Icons.arrow_back_ios_new_rounded,
-                        color: Colors.white,
-                        size: 18,
-                      ),
-                    ),
-                  ),
-                ),
+
+
 
                 const SizedBox(height: 20),
 
