@@ -14,6 +14,7 @@ import 'welcome.dart';
 import 'responsive_layout.dart';
 import 'employee_details.dart';
 import 'attendance_details.dart';
+import 'tasks.dart';
 final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 FlutterLocalNotificationsPlugin();
 
@@ -142,8 +143,8 @@ class _LoginPageState extends State<LoginPage> {
           ),
         );
 
-        ScaffoldMessenger.of(context)
-            .showSnackBar(SnackBar(content: Text("Welcome $empName")));
+        //ScaffoldMessenger.of(context)
+            //.showSnackBar(SnackBar(content: Text("Welcome $empName")));
 
       } else {
 
@@ -1162,7 +1163,10 @@ class _HomePageState extends State<HomePage> {
       case 2:
         return const ExpensesPage();
       case 3:
-        return const Center(child: Text("Tasks Page"));
+        return TasksPage(
+          authToken: widget.authToken,
+          empId: widget.empId,
+        );
       case 4:
         return const Center(child: Text("More Page"));
       default:
