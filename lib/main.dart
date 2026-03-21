@@ -66,6 +66,72 @@ class _LoginPageState extends State<LoginPage> {
   bool isLoading = false;
   bool _obscurePassword = true;
 
+  //showing pop up box
+  Future<void> showPopup(String title, String message,
+      {IconData icon = Icons.info, Color iconColor = Colors.blue}) async {
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        title: Row(
+          children: [
+            Icon(icon, color: iconColor),
+            const SizedBox(width: 8),
+            Expanded(child: Text(title)),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+  //checking location
+  Future<bool> checkLocationEnabled() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+    if (!serviceEnabled) {
+      if (!mounted) return false;
+
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.location_off, color: Colors.red),
+              SizedBox(width: 8),
+              Text("Location Disabled"),
+            ],
+          ),
+          content: const Text("Please enable your device location to continue"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+
+      return false;
+    }
+
+    return true;
+  }
+
   Future<bool> checkInternetConnection() async {
     try {
       final result = await InternetAddress.lookup('google.com');
@@ -94,6 +160,7 @@ class _LoginPageState extends State<LoginPage> {
 
   Future<void> _login() async {
     if (!await checkInternetConnection()) return;
+    if (!await checkLocationEnabled()) return;
 
     String username = _usernameController.text.trim();
     String password = _passwordController.text.trim();
@@ -193,8 +260,12 @@ class _LoginPageState extends State<LoginPage> {
       }
 
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error: $e")));
+      await showPopup(
+        "Error",
+        "Error: $e",
+        icon: Icons.error_outline,
+        iconColor: Colors.red,
+      );
     }
 
     setState(() => isLoading = false);
@@ -379,6 +450,72 @@ class _HomePageState extends State<HomePage> {
       "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
     ];
     return months[month - 1];
+  }
+
+  //showing pop up box
+  Future<void> showPopup(String title, String message,
+      {IconData icon = Icons.info, Color iconColor = Colors.blue}) async {
+    if (!mounted) return;
+
+    await showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15),
+        ),
+        title: Row(
+          children: [
+            Icon(icon, color: iconColor),
+            const SizedBox(width: 8),
+            Expanded(child: Text(title)),
+          ],
+        ),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
+    );
+  }
+  //checking location
+  Future<bool> checkLocationEnabled() async {
+    bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
+
+    if (!serviceEnabled) {
+      if (!mounted) return false;
+
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (context) => AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(15),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.location_off, color: Colors.red),
+              SizedBox(width: 8),
+              Text("Location Disabled"),
+            ],
+          ),
+          content: const Text("Please enable your device location to continue"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text("OK"),
+            ),
+          ],
+        ),
+      );
+
+      return false;
+    }
+
+    return true;
   }
 
   Future<void> getEmployeeStatus() async {
@@ -580,6 +717,7 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> checkIn() async {
     if (!await checkInternetConnection()) return;
+    if (!await checkLocationEnabled()) return;
     setState(() => isLoading = true);
     try {
       Position? position = await _getLocation();
@@ -617,8 +755,12 @@ class _HomePageState extends State<HomePage> {
         });
         await showNotification(
             "Check In Successful", "Checked in at ${formatOnlyTime(checkInTime!)}");
-        ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text("Checked In Successfully")));
+        await showPopup(
+          "Success",
+          "Checked In Successfully",
+          icon: Icons.check_circle,
+          iconColor: Colors.green,
+        );
         await getEmployeeStatus();
       } else {
         String message = data["message"] ?? "Check In Failed";
@@ -660,8 +802,12 @@ class _HomePageState extends State<HomePage> {
         );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error: $e")));
+      await showPopup(
+        "Error",
+        "Error: $e",
+        icon: Icons.error_outline,
+        iconColor: Colors.red,
+      );
     }
     setState(() => isLoading = false);
   }
@@ -669,9 +815,14 @@ class _HomePageState extends State<HomePage> {
 
   Future<void> checkOut() async {
     if (!await checkInternetConnection()) return;
+    if (!await checkLocationEnabled()) return;
     if (checkInTime == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text("Please Check In First")));
+      await showPopup(
+        "Warning",
+        "Please Check In First",
+        icon: Icons.warning,
+        iconColor: Colors.orange,
+      );
       return;
     }
     setState(() => isLoading = true);
@@ -706,16 +857,28 @@ class _HomePageState extends State<HomePage> {
 
         await showNotification(
             "Check Out Successful", "Worked Duration: $cumulativeHours");
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(data["message"] ?? "Checkout successful")));
+        await showPopup(
+          "Success",
+          data["message"] ?? "Checkout successful",
+          icon: Icons.check_circle,
+          iconColor: Colors.green,
+        );
         await getEmployeeStatus();
       } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text(data["message"] ?? "Check Out Failed")));
+        await showPopup(
+          "Failed",
+          data["message"] ?? "Check Out Failed",
+          icon: Icons.error,
+          iconColor: Colors.red,
+        );
       }
     } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text("Error: $e")));
+      await showPopup(
+        "Error",
+        "Error: $e",
+        icon: Icons.error_outline,
+        iconColor: Colors.red,
+      );
     }
     setState(() => isLoading = false);
   }
@@ -1157,7 +1320,7 @@ class _HomePageState extends State<HomePage> {
             authToken: widget.authToken,
             empId: widget.empId);
       case 2:
-        return const ExpensesPage();
+        return ExpensesPage(token: widget.authToken);
       case 3:
         return TasksPage(
           authToken: widget.authToken,
