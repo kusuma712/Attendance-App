@@ -171,7 +171,7 @@ class _TasksPageState extends State<TasksPage> {
               if (_filteredTasks.isEmpty)
                 _buildEmptyState()
               else
-                ..._filteredTasks.map((t) => _buildProjectNameCard(t)).toList(),
+    _buildProjectListCard(),
             ],
             const SizedBox(height: 20),
           ],
@@ -266,79 +266,84 @@ class _TasksPageState extends State<TasksPage> {
     );
   }
 
-  Widget _buildProjectNameCard(Map<String, dynamic> task) {
-    final String status      = (task["status"] ?? "active").toString();
-    final String projectName = (task["project_name"] ?? "Unnamed Project").toString();
-    final String taskName    = (task["task_name"] ?? "").toString();
-    final String dueDate     = (task["due_date"] ?? "").toString();
-    final String taskId      = (task["task_id"] ?? "").toString();
-    final List<String> subprojects = task["subprojects"] is List ? List<String>.from(task["subprojects"]) : [];
-    final bool overdue = _isOverdue(dueDate) && status.toLowerCase() != "completed";
+  Widget _buildProjectListCard() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: _borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        children: _filteredTasks.map((task) {
+          final String status      = (task["status"] ?? "active").toString();
+          final String projectName = (task["project_name"] ?? "Unnamed Project").toString();
+          final String taskName    = (task["task_name"] ?? "").toString();
+          final String dueDate     = (task["due_date"] ?? "").toString();
+          final String taskId      = (task["task_id"] ?? "").toString();
+          final bool overdue = _isOverdue(dueDate) && status.toLowerCase() != "completed";
 
-    return GestureDetector(
-      onTap: () => _showTaskDetail(task),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: overdue ? _red.withOpacity(0.30) : _statusColor(status).withOpacity(0.20),
-            width: 1.5,
-          ),
-          boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.05), blurRadius: 10, offset: const Offset(0,3))],
-        ),
-        child: Row(children: [
-          Container(
-            width: 48, height: 48,
-            decoration: BoxDecoration(color: _statusBg(status), shape: BoxShape.circle),
-            child: Icon(_statusIcon(status), color: _statusColor(status), size: 24),
-          ),
-          const SizedBox(width: 14),
-          Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text(projectName,
-                style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w800, color: _darkText),
-                overflow: TextOverflow.ellipsis, maxLines: 1),
-            const SizedBox(height: 3),
-            Text(taskName,
-                style: TextStyle(fontSize: 12, color: Colors.grey.shade500, fontWeight: FontWeight.w500),
-                overflow: TextOverflow.ellipsis, maxLines: 1),
-            if (subprojects.isNotEmpty) ...[
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: _blue.withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: _blue.withOpacity(0.2)),
+          return GestureDetector(
+            onTap: () => _showTaskDetail(task), // ✅ SAME LOGIC
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              decoration: BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(
+                    color: Colors.grey.shade200,
+                    width: 1,
+                  ),
                 ),
-                child: Text("${subprojects.length} subproject${subprojects.length == 1 ? '' : 's'}",
-                    style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _blue.withOpacity(0.85))),
               ),
-            ],
-          ])),
-          const SizedBox(width: 10),
-          Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(color: _statusColor(status), borderRadius: BorderRadius.circular(20)),
-              child: Text(status.toUpperCase(),
-                  style: const TextStyle(fontSize: 9, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5)),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          projectName,
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: _darkText,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          taskName,
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey.shade500,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                  // 👉 RIGHT SIDE ARROW
+                  Container(
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 16,
+                      color: Colors.grey.shade400,
+                    ),
+                  ),
+                ],
+              ),
             ),
-            const SizedBox(height: 5),
-            if (overdue)
-              Row(children: [
-                Icon(Icons.warning_amber_rounded, size: 11, color: _red),
-                const SizedBox(width: 3),
-                Text("Overdue", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w600, color: _red)),
-              ])
-            else
-              Text("#$taskId", style: TextStyle(fontSize: 10, color: Colors.grey.shade400)),
-            const SizedBox(height: 4),
-            Icon(Icons.chevron_right_rounded, size: 20, color: Colors.grey.shade300),
-          ]),
-        ]),
+          );
+        }).toList(),
       ),
     );
   }
@@ -362,159 +367,167 @@ class _TasksPageState extends State<TasksPage> {
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => Container(
-        constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.90),
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(context).size.height * 0.90,
+        ),
         decoration: const BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.vertical(top: Radius.circular(26)),
         ),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(
-            margin: const EdgeInsets.only(top: 12), width: 40, height: 4,
-            decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(4)),
-          ),
-          Container(
-            margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: _statusColor(status),
-              borderRadius: BorderRadius.circular(18),
-              boxShadow: [BoxShadow(color: _statusColor(status).withOpacity(0.28), blurRadius: 12, offset: const Offset(0,4))],
+        child: Column(
+          children: [
+
+            // drag handle
+            Container(
+              margin: const EdgeInsets.only(top: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey.shade300,
+                borderRadius: BorderRadius.circular(4),
+              ),
             ),
-            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Row(children: [
-                Icon(_statusIcon(status), color: Colors.white, size: 16),
-                const SizedBox(width: 7),
-                Expanded(child: Text(projectName,
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Colors.white.withOpacity(0.85)),
-                    overflow: TextOverflow.ellipsis)),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.20), borderRadius: BorderRadius.circular(20)),
-                  child: Text("#$taskId", style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
-                ),
-              ]),
-              const SizedBox(height: 8),
-              Text(taskName, style: const TextStyle(fontSize: 17, fontWeight: FontWeight.w800, color: Colors.white)),
-              const SizedBox(height: 10),
-              Row(children: [
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-                  decoration: BoxDecoration(color: Colors.white.withOpacity(0.20), borderRadius: BorderRadius.circular(20)),
-                  child: Text(status.toUpperCase(),
-                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white, letterSpacing: 0.5)),
-                ),
-                if (overdue) ...[
-                  const SizedBox(width: 8),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(20)),
-                    child: Row(children: const [
-                      Icon(Icons.warning_amber_rounded, size: 12, color: Colors.white),
-                      SizedBox(width: 4),
-                      Text("OVERDUE", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
-                    ]),
-                  ),
-                ],
-              ]),
-            ]),
-          ),
-          Flexible(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                _DetailTile(icon: Icons.folder_rounded,         color: _blue,                        label: "Project",    value: projectName),
-                const SizedBox(height: 10),
-                _DetailTile(icon: Icons.task_alt_rounded,       color: _statusColor(status),         label: "Task",       value: taskName),
-                const SizedBox(height: 10),
-                _DetailTile(icon: Icons.flag_rounded,           color: _statusColor(status),         label: "Status",     value: status.toUpperCase()),
-                const SizedBox(height: 10),
-                _DetailTile(icon: Icons.calendar_today_rounded, color: overdue ? _red : Colors.grey, label: "Due Date",   value: _formatDate(dueDate)),
-                if (deadline.isNotEmpty && deadline != "null") ...[
-                  const SizedBox(height: 10),
-                  _DetailTile(icon: Icons.event_busy_rounded, color: _amber, label: "Deadline", value: deadline),
-                ],
-                const SizedBox(height: 10),
-                _DetailTile(icon: Icons.access_time_rounded, color: Colors.grey, label: "Created On", value: _formatCreatedAt(createdAt)),
-                if (description.isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  const _SectionLabel(label: "DESCRIPTION"),
-                  const SizedBox(height: 8),
-                  Container(
-                    width: double.infinity, padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(color: _cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: _borderColor)),
-                    child: Text(description, style: TextStyle(fontSize: 13, color: Colors.grey.shade700, height: 1.6)),
-                  ),
-                ],
-                if (subprojects.isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  const _SectionLabel(label: "SUBPROJECTS"),
-                  const SizedBox(height: 8),
-                  ...subprojects.asMap().entries.map((e) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: _blue.withOpacity(0.05), borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: _blue.withOpacity(0.15)),
+
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(16, 20, 16, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                    // PROJECT NAME
+                    Text(
+                      projectName,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.grey,
+                      ),
                     ),
-                    child: Row(children: [
-                      Container(width: 26, height: 26,
-                          decoration: BoxDecoration(color: _blue.withOpacity(0.12), shape: BoxShape.circle),
-                          child: Center(child: Text("${e.key+1}", style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: _blue)))),
-                      const SizedBox(width: 12),
-                      Expanded(child: Text(e.value, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w600, color: _blue.withOpacity(0.85)))),
-                    ]),
-                  )),
-                ],
-                if (subTasks.isNotEmpty) ...[
-                  const SizedBox(height: 18),
-                  const _SectionLabel(label: "SUB-TASKS"),
-                  const SizedBox(height: 8),
-                  ...subTasks.map((st) => Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                    decoration: BoxDecoration(color: _cardBg, borderRadius: BorderRadius.circular(12), border: Border.all(color: _borderColor)),
-                    child: Row(children: [
-                      Icon(Icons.subdirectory_arrow_right_rounded, size: 16, color: Colors.grey.shade400),
-                      const SizedBox(width: 10),
-                      Expanded(child: Text(st, style: const TextStyle(fontSize: 13, color: _darkText))),
-                    ]),
-                  )),
-                ],
-                const SizedBox(height: 24),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      Navigator.pop(context);
-                      _showReportForm(taskId, projectName, taskName);
-                    },
-                    icon: const Icon(Icons.upload_file_rounded, size: 20, color: Colors.white),
-                    label: const Text("Submit Task Report",
-                        style: TextStyle(fontWeight: FontWeight.w700, fontSize: 15, color: Colors.white)),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: _green,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      padding: const EdgeInsets.symmetric(vertical: 14), elevation: 0,
+
+                    const SizedBox(height: 6),
+
+                    // TASK NAME
+                    Text(
+                      taskName,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        color: _darkText,
+                      ),
                     ),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton(
-                    onPressed: () => Navigator.pop(context),
-                    style: OutlinedButton.styleFrom(
-                      side: BorderSide(color: Colors.grey.shade300),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                      padding: const EdgeInsets.symmetric(vertical: 13),
+
+                    const SizedBox(height: 16),
+
+                    // DETAILS SIMPLE TEXT
+                    Text("Status: ${status.toUpperCase()}"),
+                    const SizedBox(height: 6),
+                    Text("Task ID: #$taskId"),
+                    const SizedBox(height: 6),
+                    Text("Due Date: ${_formatDate(dueDate)}"),
+                    const SizedBox(height: 6),
+                    Text("Created On: ${_formatCreatedAt(createdAt)}"),
+
+                    if (deadline.isNotEmpty && deadline != "null") ...[
+                      const SizedBox(height: 6),
+                      Text("Deadline: $deadline"),
+                    ],
+
+                    if (overdue) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        "Overdue",
+                        style: TextStyle(
+                          color: _red,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+
+                    // DESCRIPTION
+                    if (description.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Description",
+                        style: TextStyle(
+                          fontWeight: FontWeight.w700,
+                          fontSize: 14,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(description),
+                    ],
+
+                    // SUBPROJECTS
+                    if (subprojects.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Subprojects",
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 6),
+                      ...subprojects.map((e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text("• $e"),
+                      )),
+                    ],
+
+                    // SUBTASKS
+                    if (subTasks.isNotEmpty) ...[
+                      const SizedBox(height: 20),
+                      const Text(
+                        "Sub Tasks",
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      const SizedBox(height: 6),
+                      ...subTasks.map((e) => Padding(
+                        padding: const EdgeInsets.only(bottom: 4),
+                        child: Text("• $e"),
+                      )),
+                    ],
+
+                    const SizedBox(height: 30),
+
+                    // SUBMIT BUTTON (UNCHANGED LOGIC)
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context);
+                          _showReportForm(taskId, projectName, taskName);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: _green,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                        ),
+                        child: const Text(
+                          "Submit Task Report",
+                          style: TextStyle(
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
                     ),
-                    child: Text("Close", style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14, color: Colors.grey.shade600)),
-                  ),
+
+                    const SizedBox(height: 10),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: const Text("Close"),
+                      ),
+                    ),
+                  ],
                 ),
-              ]),
+              ),
             ),
-          ),
-        ]),
+          ],
+        ),
       ),
     );
   }
@@ -851,29 +864,7 @@ class _TasksPageState extends State<TasksPage> {
                   margin: const EdgeInsets.only(top: 12), width: 40, height: 4,
                   decoration: BoxDecoration(color: Colors.grey.shade300, borderRadius: BorderRadius.circular(4)),
                 ),
-                Container(
-                  margin: const EdgeInsets.fromLTRB(16, 14, 16, 0),
-                  padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                  decoration: BoxDecoration(color: _green, borderRadius: BorderRadius.circular(16)),
-                  child: Row(children: [
-                    Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.18), borderRadius: BorderRadius.circular(10)),
-                      child: const Icon(Icons.upload_file_rounded, color: Colors.white, size: 20),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-                      const Text("SUBMIT REPORT", style: TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white70, letterSpacing: 1.0)),
-                      const SizedBox(height: 2),
-                      Text(projectName, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w800, color: Colors.white), overflow: TextOverflow.ellipsis),
-                    ])),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(color: Colors.white.withOpacity(0.20), borderRadius: BorderRadius.circular(20)),
-                      child: Text("#$taskId", style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
-                    ),
-                  ]),
-                ),
+
                 Flexible(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -1102,7 +1093,7 @@ class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.label});
   @override
   Widget build(BuildContext context) => Text(label,
-      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.grey, letterSpacing: 1.0));
+      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.black, letterSpacing: 1.0));
 }
 
 class _DetailTile extends StatelessWidget {

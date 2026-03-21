@@ -399,6 +399,7 @@ class ResponsiveScaffold extends StatelessWidget {
   PreferredSizeWidget _buildAppBar(BuildContext context,
       {bool showActions = false}) {
     return AppBar(
+      automaticallyImplyLeading: false,
       backgroundColor: _primary,
       elevation: 0,
       centerTitle: true,
